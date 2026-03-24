@@ -216,3 +216,8 @@ Contributing:
 
 License: tasklease is released under the MIT License.
 
+---
+
+<p align="center">
+  Developed by <a href="https://github.com/ratelworks"><strong>RATELWORKS</strong></a>
+</p>
