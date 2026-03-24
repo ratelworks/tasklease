@@ -1,131 +1,218 @@
-# tasklease
+<h1 align="center">tasklease</h1>
+Portable task envelopes keep work from getting lost when a session ends.
+tasklease compiles, validates, and diffs a tiny JSON lease so the next run can resume from git state instead of starting over.
 
-`tasklease`는 Git 저장소 상태를 포함한 작업 인계용 JSON 엔벨로프를 만들고, 검증하고, 비교하는 Go CLI입니다.
+[![CI](https://github.com/ratelworks/tasklease/actions/workflows/ci.yml/badge.svg)](https://github.com/ratelworks/tasklease/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/ratelworks/tasklease)](https://github.com/ratelworks/tasklease/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ratelworks/tasklease.svg)](https://pkg.go.dev/github.com/ratelworks/tasklease)
 
-## 기능
+## The Problem
+On Monday, one person starts a task in a clean repository and writes down a few notes in chat. On Wednesday, someone changes the repo, the original shell session is gone, and the notes no longer include the exact commit, tool access, or output path. On Friday, the next person has to guess what state the task was in before they can continue.
 
-- `compile`: 현재 Git 상태와 플래그를 바탕으로 작업 인계 파일을 생성합니다.
-- `validate`: 생성된 엔벨로프가 현재 Git 상태와 맞는지 검사합니다.
-- `diff`: 두 엔벨로프의 차이를 안정적인 텍스트 형식으로 출력합니다.
+tasklease turns that handoff into a small JSON lease with the git revision, allowed tools, secret references, and resume checkpoint. The next person can validate the lease before they start, instead of rediscovering the same missing context. This is the same problem that `git stash` solved for local code changes.
 
-## 요구 사항
+## What It Does
+Run `validate` on a bad lease and tasklease prints exactly what needs to be fixed.
 
-- Go 1.22 이상
-- Git
+```bash
+tasklease validate /tmp/tasklease.example.json --repo /tmp/tasklease-repo
+Git: ERROR
+Issue: working tree is dirty.
+Fix: Commit or stash the changes before you hand off the task.
 
-## 설치
+Tools: ERROR
+Issue: unsupported tools: browser.
+Fix: Replace them with supported tools: git, shell, go, make, fs, or test.
 
-저장소를 클론한 뒤 바로 빌드할 수 있습니다.
+Handoff: ERROR
+Issue: artifact path "/tmp/tasklease-report.md" is not portable.
+Fix: Use a repo-relative path without absolute prefixes or parent traversal.
+```
 
+That output is intentional: the command exits with code `1` because the lease is not safe to hand off yet.
+
+## Non-Goals
+- Not a task scheduler or queue.
+- Not a networked agent broker.
+- Not an LLM prompt runner.
+
+## Getting Started
+### Step 1: Install
+```bash
+go install github.com/ratelworks/tasklease@latest
+```
+
+### Step 2: Create Input
+Create a JSON lease with the fields below.
+
+```json
+{
+  "version": "v0.1.0",
+  "name": "release-review",
+  "task": "Review the release notes and update the handoff",
+  "repo": {
+    "revision": "abc123",
+    "slice": "."
+  },
+  "toolSubset": ["git", "shell", "go"],
+  "secretRefs": ["TASKLEASE_API_TOKEN"],
+  "artifacts": ["reports/release.md"],
+  "resume": {
+    "mode": "git",
+    "checkpoint": "abc123"
+  }
+}
+```
+
+| Field | What it means |
+|---|---|
+| `version` | Envelope format version. Keep it on `v0.1.0` for this release. |
+| `name` | Short human label for the task lease. |
+| `task` | Plain-English description of the work to do. |
+| `repo.revision` | The git commit that the lease was compiled from. |
+| `repo.slice` | Repo-relative slice or working area for the task. |
+| `toolSubset` | The exact tools the next agent may use. |
+| `secretRefs` | Secret or environment references the task expects. |
+| `artifacts` | Repo-relative files the task should write back. |
+| `resume.mode` | Resume strategy. Use `git` for deterministic resumes. |
+| `resume.checkpoint` | Commit hash used to resume the task safely. |
+
+### Step 3: Run It
+```bash
+tasklease validate lease.json --repo .
+```
+
+Example output from a lease that is intentionally unsafe:
+
+```text
+Git: ERROR
+Issue: working tree is dirty.
+Fix: Commit or stash the changes before you hand off the task.
+
+Tools: ERROR
+Issue: unsupported tools: browser.
+Fix: Replace them with supported tools: git, shell, go, make, fs, or test.
+
+Handoff: ERROR
+Issue: artifact path "/tmp/tasklease-report.md" is not portable.
+Fix: Use a repo-relative path without absolute prefixes or parent traversal.
+```
+
+### Step 4: Add to CI
+```yaml
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: true
+      - run: go mod download
+      - run: go test -race ./...
+      - run: go vet ./...
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.0
+          args: ./...
+```
+
+## How It Works
+```text
+tasklease compile
+  |
+  v
+lease.json -----> tasklease validate -----> git state + portable paths
+   |
+   +------------> tasklease diff ---------> field-by-field changes
+```
+
+- `compile` normalizes flags and records the current git revision.
+- `validate` checks the lease against live git state and portability rules.
+- `diff` compares two leases field by field.
+- The output stays deterministic for the same input and repository state.
+
+## Feature Reference
+| Feature | Description |
+|---|---|
+| `compile` | Create a portable lease from flags and live git data. |
+| `validate` | Check a lease before handoff or resume. |
+| `diff` | Compare two leases and show what changed. |
+
+### `compile`
+What it does: turns CLI flags plus git state into a normalized JSON lease.
+
+Example:
+```bash
+tasklease compile --task "Review the release notes" --tool git --tool shell --artifact reports/release.md
+```
+
+How to disable: pass `--revision` and `--slice` explicitly if you do not want git auto-detection.
+
+### `validate`
+What it does: checks the lease against the current git commit, tool subset, secret refs, and artifact paths.
+
+Example:
+```bash
+tasklease validate lease.json --repo .
+```
+
+How to disable: skip the command in local workflows and keep it for CI or pre-handoff checks.
+
+### `diff`
+What it does: shows field-level changes between two lease files.
+
+Example:
+```bash
+tasklease diff before.json after.json
+```
+
+How to disable: do not invoke the command; it has no background side effects.
+
+## CLI Reference
+| Type | Command or Flag | Purpose |
+|---|---|---|
+| Command | `tasklease compile` | Compile a lease from flags and git state. |
+| Command | `tasklease validate <envelope>` | Validate a lease file. |
+| Command | `tasklease diff <left> <right>` | Compare two lease files. |
+| Flag | `--task` | Task description for `compile`. |
+| Flag | `--tool` | Repeatable tool subset entry for `compile`. |
+| Flag | `--secret` | Repeatable secret reference for `compile`. |
+| Flag | `--artifact` | Repeatable artifact path for `compile`. |
+| Flag | `--revision` | Override git revision during `compile`. |
+| Flag | `--slice` | Override repo slice during `compile`. |
+| Flag | `--output` | Write compiled JSON to a file instead of stdout. |
+| Flag | `--repo` | Git repository path for `compile` and `validate`. |
+
+| Exit Code | Meaning |
+|---|---|
+| `0` | Success. |
+| `1` | User error, such as an invalid lease or unsafe handoff. |
+| `2` | System error, such as I/O or git failure. |
+
+## Development + Contributing + License
+Clone, build, and test:
 ```bash
 git clone https://github.com/ratelworks/tasklease.git
 cd tasklease
-go test ./...
-go vet ./...
-go build -o tasklease .
+go build ./...
+go test -race ./...
 ```
 
-로컬에 설치하려면 저장소 루트에서 다음을 실행합니다.
+Contributing:
+- Fork the repository and create a feature branch.
+- Keep changes small and update the fixture tests when output changes.
+- Run `go test -race ./...` and `go vet ./...` before opening a pull request.
+- Document any new command-line behavior in this README.
 
-```bash
-go install .
-```
+License: tasklease is released under the MIT License.
 
-설치 후에는 `tasklease --help`로 사용 가능한 명령을 확인할 수 있습니다.
-
-## 사용법
-
-### 1. 엔벨로프 생성
-
-`compile`은 현재 Git 저장소의 `HEAD`, 작업 트리 상태, 브랜치, 접두 경로를 읽어 JSON을 만듭니다.
-
-```bash
-tasklease compile \
-  --task "internal/tasklease의 검증 규칙 정리" \
-  --name tasklease-cleanup \
-  --tool git \
-  --tool shell \
-  --tool go \
-  --artifact reports/tasklease.md \
-  --budget-minutes 120 \
-  --budget-files 10 \
-  --repo . \
-  --output lease.json
-```
-
-출력을 파일로 저장하지 않으면 표준 출력으로 JSON이 출력됩니다.
-
-```bash
-tasklease compile \
-  --task "README 보강" \
-  --tool git \
-  --tool shell \
-  --artifact notes/hand-off.md \
-  --repo .
-```
-
-### 2. 엔벨로프 검증
-
-`validate`는 저장된 엔벨로프가 현재 Git `HEAD`와 일치하는지, 작업 트리가 깨끗한지, 도구와 경로가 허용 규칙을 따르는지 확인합니다.
-
-```bash
-tasklease validate --repo . lease.json
-```
-
-검증 결과는 다음과 같은 형식으로 출력됩니다.
-
-```text
-Git: OK
-Issue: git HEAD matches the resume checkpoint and the tree is clean.
-
-Tools: OK
-Issue: tool subset is explicit and supported.
-
-Handoff: WARN
-Issue: no artifact paths are declared.
-Fix: Add at least one output path so the handoff tells the next agent where to write results.
-```
-
-### 3. 엔벨로프 비교
-
-`diff`는 두 JSON 파일의 필드 차이를 읽기 쉬운 텍스트로 보여줍니다.
-
-```bash
-tasklease diff lease-old.json lease-new.json
-```
-
-예시 출력:
-
-```text
-toolSubset
-Left:  [git, shell]
-Right: [git, shell, go]
-
-repo.revision
-Left:  abc123
-Right: def456
-```
-
-## 지원 도구
-
-`compile`과 `validate`에서 허용하는 도구 값은 다음과 같습니다.
-
-- `git`
-- `shell`
-- `go`
-- `make`
-- `fs`
-- `test`
-
-## 개발
-
-로컬에서 변경 후에는 아래 명령으로 빠르게 확인할 수 있습니다.
-
-```bash
-go test ./...
-go vet ./...
-```
-
-## 라이선스
-
-MIT License. 자세한 내용은 [`LICENSE`](LICENSE)를 참고하세요.

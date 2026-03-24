@@ -43,12 +43,15 @@ func run() int {
 	if err := cmd.Execute(); err != nil {
 		var ex *exitError
 		if errors.As(err, &ex) {
+			if ex.code == exitCodeUser && strings.Contains(ex.Error(), "validate task lease: envelope has blocking issues") {
+				return ex.code
+			}
 			fmt.Fprintln(os.Stderr, ex.Error())
 			return ex.code
 		}
 
 		fmt.Fprintln(os.Stderr, err.Error())
-		return exitCodeSystem
+		return exitCodeUser
 	}
 
 	return exitCodeSuccess
@@ -93,7 +96,7 @@ func newCompileCommand() *cobra.Command {
 			gitState, err := tasklease.LoadGitState(repoDir)
 			if err != nil {
 				return &exitError{
-					code: exitCodeSystem,
+					code: exitCodeUser,
 					err:  fmt.Errorf("compile task lease: %w", err),
 				}
 			}
@@ -158,10 +161,6 @@ func newCompileCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&repoDir, "repo", "r", ".", "Git repository to inspect")
 	cmd.Flags().StringVarP(&outputPath, "output", "o", "", "Write the compiled envelope to a file")
 
-	if err := cmd.MarkFlagRequired("task"); err != nil {
-		panic(err)
-	}
-
 	return cmd
 }
 
@@ -171,12 +170,18 @@ func newValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate <envelope>",
 		Short: "Validate a task lease envelope against the current git state",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return &exitError{
+					code: exitCodeUser,
+					err:  fmt.Errorf("validate task lease: expected 1 envelope path, got %d", len(args)),
+				}
+			}
+
 			env, err := tasklease.LoadEnvelope(args[0])
 			if err != nil {
 				return &exitError{
-					code: exitCodeSystem,
+					code: exitCodeUser,
 					err:  fmt.Errorf("validate task lease: %w", err),
 				}
 			}
@@ -184,7 +189,7 @@ func newValidateCommand() *cobra.Command {
 			gitState, err := tasklease.LoadGitState(repoDir)
 			if err != nil {
 				return &exitError{
-					code: exitCodeSystem,
+					code: exitCodeUser,
 					err:  fmt.Errorf("validate task lease: %w", err),
 				}
 			}
@@ -219,12 +224,18 @@ func newDiffCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "diff <left> <right>",
 		Short: "Diff two task lease envelopes",
-		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return &exitError{
+					code: exitCodeUser,
+					err:  fmt.Errorf("diff task lease: expected 2 envelope paths, got %d", len(args)),
+				}
+			}
+
 			left, err := tasklease.LoadEnvelope(args[0])
 			if err != nil {
 				return &exitError{
-					code: exitCodeSystem,
+					code: exitCodeUser,
 					err:  fmt.Errorf("diff task lease: load left envelope: %w", err),
 				}
 			}
@@ -232,7 +243,7 @@ func newDiffCommand() *cobra.Command {
 			right, err := tasklease.LoadEnvelope(args[1])
 			if err != nil {
 				return &exitError{
-					code: exitCodeSystem,
+					code: exitCodeUser,
 					err:  fmt.Errorf("diff task lease: load right envelope: %w", err),
 				}
 			}
