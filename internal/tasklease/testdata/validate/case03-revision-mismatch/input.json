@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "revision-mismatch",
+    "task": "Compare the release branch against the current commit",
+    "repo": {
+      "revision": "def456",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell"],
+    "secretRefs": ["RELEASE_TOKEN"],
+    "artifacts": ["reports/release.md"],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "def456"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": false,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

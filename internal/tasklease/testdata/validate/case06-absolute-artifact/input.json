@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "absolute-artifact",
+    "task": "Inspect the cache layout",
+    "repo": {
+      "revision": "abc123",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell"],
+    "secretRefs": ["CACHE_TOKEN"],
+    "artifacts": ["/tmp/cache-report.md"],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "abc123"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": false,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

@@ -82,7 +82,7 @@ func TestDiffEnvelopes(t *testing.T) {
 		SecretRefs: []string{"TOKEN_A"},
 		Artifacts:  []string{"reports/left.md"},
 		Resume: ResumeSpec{
-			Mode:      "git",
+			Mode:       "git",
 			Checkpoint: "abc123",
 		},
 	}
@@ -99,7 +99,7 @@ func TestDiffEnvelopes(t *testing.T) {
 		SecretRefs: []string{"TOKEN_A", "TOKEN_B"},
 		Artifacts:  []string{"reports/right.md"},
 		Resume: ResumeSpec{
-			Mode:      "git",
+			Mode:       "git",
 			Checkpoint: "def456",
 		},
 	}

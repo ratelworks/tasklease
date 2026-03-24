@@ -1,0 +1,9 @@
+Git: OK
+Issue: git HEAD matches the resume checkpoint and the tree is clean.
+
+Tools: OK
+Issue: tool subset is explicit and supported.
+
+Handoff: ERROR
+Issue: secret ref "BAD SECRET" is not portable.
+Fix: Use a short environment-like name or a provider URI without whitespace.

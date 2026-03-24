@@ -1,0 +1,9 @@
+Git: ERROR
+Issue: resume checkpoint "def456" does not match git HEAD "abc123".
+Fix: Recompile the envelope from the current commit before handing it off.
+
+Tools: OK
+Issue: tool subset is explicit and supported.
+
+Handoff: OK
+Issue: artifact paths and secret refs are portable.

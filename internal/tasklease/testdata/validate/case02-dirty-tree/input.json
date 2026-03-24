@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "dirty-tree",
+    "task": "Inspect the payment service changes",
+    "repo": {
+      "revision": "abc123",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell"],
+    "secretRefs": ["PAYMENT_TOKEN"],
+    "artifacts": ["reports/payment.md"],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "abc123"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": true,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

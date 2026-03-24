@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "auth-cleanup",
+    "task": "Review the auth cleanup plan and update the implementation notes",
+    "repo": {
+      "revision": "abc123",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell", "go"],
+    "secretRefs": ["TASKLEASE_API_TOKEN"],
+    "artifacts": ["reports/auth-cleanup.md"],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "abc123"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": false,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "no-artifacts",
+    "task": "Review the empty handoff",
+    "repo": {
+      "revision": "abc123",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell"],
+    "secretRefs": ["EMPTY_TOKEN"],
+    "artifacts": [],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "abc123"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": false,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

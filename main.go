@@ -58,7 +58,7 @@ func newRootCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "tasklease",
 		Short: "Portable task envelopes for deterministic handoff and resume",
-		Long: "tasklease compiles, validates, and diffs small JSON envelopes that capture a git-backed task lease for another agent or developer.",
+		Long:  "tasklease compiles, validates, and diffs small JSON envelopes that capture a git-backed task lease for another agent or developer.",
 	}
 
 	root.AddCommand(newCompileCommand())
@@ -252,4 +252,3 @@ func newDiffCommand() *cobra.Command {
 
 	return cmd
 }
-

@@ -14,33 +14,33 @@ import (
 )
 
 const (
-	SpecVersion      = "v0.1.0"
+	SpecVersion       = "v0.1.0"
 	DefaultFilesystem = "workspace"
-	MaxToolSubset    = 6
+	MaxToolSubset     = 6
 )
 
 const (
-	StatusOK    ValidationStatus = "OK"
+	StatusOK     ValidationStatus = "OK"
 	StatusWarn   ValidationStatus = "WARN"
 	StatusError  ValidationStatus = "ERROR"
-	CategoryGit  = "Git"
-	CategoryTool = "Tools"
-	CategoryHand = "Handoff"
+	CategoryGit                   = "Git"
+	CategoryTool                  = "Tools"
+	CategoryHand                  = "Handoff"
 )
 
 // Envelope describes a portable task lease for handoff and resume.
 type Envelope struct {
-	Version     string       `json:"version,omitempty"`
-	Name        string       `json:"name,omitempty"`
-	Task        string       `json:"task,omitempty"`
-	Repo        RepoSpec     `json:"repo,omitempty"`
-	ToolSubset  []string     `json:"toolSubset"`
-	SecretRefs  []string     `json:"secretRefs"`
-	Budget      BudgetSpec   `json:"budget,omitempty"`
-	Sandbox     SandboxSpec  `json:"sandbox,omitempty"`
-	Artifacts   []string     `json:"artifacts"`
-	Resume      ResumeSpec   `json:"resume,omitempty"`
-	Git         GitSnapshot  `json:"git,omitempty"`
+	Version    string      `json:"version,omitempty"`
+	Name       string      `json:"name,omitempty"`
+	Task       string      `json:"task,omitempty"`
+	Repo       RepoSpec    `json:"repo,omitempty"`
+	ToolSubset []string    `json:"toolSubset"`
+	SecretRefs []string    `json:"secretRefs"`
+	Budget     BudgetSpec  `json:"budget,omitempty"`
+	Sandbox    SandboxSpec `json:"sandbox,omitempty"`
+	Artifacts  []string    `json:"artifacts"`
+	Resume     ResumeSpec  `json:"resume,omitempty"`
+	Git        GitSnapshot `json:"git,omitempty"`
 }
 
 // RepoSpec describes the repository slice covered by the lease.
@@ -64,7 +64,7 @@ type SandboxSpec struct {
 // ResumeSpec describes the deterministic resume checkpoint.
 type ResumeSpec struct {
 	Mode       string `json:"mode,omitempty"`
-	Checkpoint  string `json:"checkpoint,omitempty"`
+	Checkpoint string `json:"checkpoint,omitempty"`
 }
 
 // GitSnapshot stores the git facts captured at compile time.
@@ -77,17 +77,17 @@ type GitSnapshot struct {
 
 // CompileOptions defines the user input for compiling an envelope.
 type CompileOptions struct {
-	Name         string
-	Task         string
-	RepoSlice    string
-	Revision     string
-	ToolSubset   []string
-	SecretRefs   []string
-	Artifacts    []string
+	Name          string
+	Task          string
+	RepoSlice     string
+	Revision      string
+	ToolSubset    []string
+	SecretRefs    []string
+	Artifacts     []string
 	BudgetMinutes int
 	BudgetFiles   int
-	Network      bool
-	Filesystem   string
+	Network       bool
+	Filesystem    string
 }
 
 // GitState represents live git data collected from the working tree.
@@ -261,7 +261,7 @@ func CompileEnvelope(opts CompileOptions, git GitState) (Envelope, error) {
 			Filesystem: strings.TrimSpace(opts.Filesystem),
 		},
 		Resume: ResumeSpec{
-			Mode:      "git",
+			Mode:       "git",
 			Checkpoint: revision,
 		},
 		Git: GitSnapshot{
@@ -707,4 +707,3 @@ func isPortablePath(value string) bool {
 	}
 	return true
 }
-

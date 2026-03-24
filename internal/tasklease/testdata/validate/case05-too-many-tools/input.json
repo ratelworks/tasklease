@@ -1,0 +1,24 @@
+{
+  "envelope": {
+    "version": "v0.1.0",
+    "name": "too-many-tools",
+    "task": "Audit the repo with too many tools",
+    "repo": {
+      "revision": "abc123",
+      "slice": "."
+    },
+    "toolSubset": ["git", "shell", "go", "make", "fs", "test", "extra"],
+    "secretRefs": ["AUDIT_TOKEN"],
+    "artifacts": ["reports/audit.md"],
+    "resume": {
+      "mode": "git",
+      "checkpoint": "abc123"
+    }
+  },
+  "git": {
+    "head": "abc123",
+    "dirty": false,
+    "prefix": ".",
+    "branch": "main"
+  }
+}

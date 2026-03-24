@@ -1,0 +1,8 @@
+Git: OK
+Issue: git HEAD matches the resume checkpoint and the tree is clean.
+
+Tools: OK
+Issue: tool subset is explicit and supported.
+
+Handoff: OK
+Issue: artifact paths and secret refs are portable.

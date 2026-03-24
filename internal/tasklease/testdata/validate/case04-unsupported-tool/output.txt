@@ -1,0 +1,9 @@
+Git: OK
+Issue: git HEAD matches the resume checkpoint and the tree is clean.
+
+Tools: ERROR
+Issue: unsupported tools: browser.
+Fix: Replace them with supported tools: git, shell, go, make, fs, or test.
+
+Handoff: OK
+Issue: artifact paths and secret refs are portable.

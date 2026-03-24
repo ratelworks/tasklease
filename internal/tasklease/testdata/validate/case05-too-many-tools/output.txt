@@ -1,0 +1,9 @@
+Git: OK
+Issue: git HEAD matches the resume checkpoint and the tree is clean.
+
+Tools: ERROR
+Issue: tool subset has 7 entries, which exceeds the limit of 6.
+Fix: Remove unused tools so the handoff stays small and explicit.
+
+Handoff: OK
+Issue: artifact paths and secret refs are portable.
