@@ -101,29 +101,11 @@ Fix: Use a repo-relative path without absolute prefixes or parent traversal.
 
 ### Step 4: Add to CI
 ```yaml
-name: CI
-
-on:
-  push:
-  pull_request:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.22"
-          cache: true
-      - run: go mod download
-      - run: go test -race ./...
-      - run: go vet ./...
-      - uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.62.0
-          args: ./...
+# .github/workflows/ci.yml
+- name: Validate task lease before handoff
+  run: |
+    go install github.com/ratelworks/tasklease@latest
+    tasklease validate lease.json --repo .
 ```
 
 ## How It Works
@@ -219,5 +201,5 @@ License: tasklease is released under the MIT License.
 ---
 
 <p align="center">
-  Developed by <a href="https://github.com/ratelworks"><strong>RATELWORKS</strong></a>
+  Developed by <strong>RATELWORKS</strong>
 </p>
